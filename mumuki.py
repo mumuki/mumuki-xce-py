@@ -5,16 +5,15 @@ from bs4 import BeautifulSoup
 from IPython.core.display import display, HTML
 
 class Mumuki():
-    def __init__(self, token, url = "https://mumuki.io"):
+    def __init__(self, token:str, locale:str, url = "https://mumuki.io"):
         self.__token = token
         self.__url = url
+        self.__locale = locale
+        self.__solution = None
 
-    def visit(self, organization, exercise, show=True):
-        if type(exercise) == int:
-            self.__organization = organization
-            self.__exercise_id = exercise
-        else:
-            raise RuntimeError(f"Unknown exercise {exercise}")
+    def visit(self, organization:str, exercise, show=True):
+        self.__organization = organization
+        self.__exercise_id = int(exercise)
 
         try:
             if show:
@@ -39,10 +38,10 @@ class Mumuki():
              self.__exercise_url(),
              headers = self.__headers())
 
-    def __post_solution(self, solution):
+    def __post_solution(self):
         return requests.post(
             self.__solution_url(),
-            json = { "solution": { "content": solution } },
+            json = { "solution": { "content": self.__solution } },
             headers = self.__headers())
 
     def show(self):
@@ -50,17 +49,28 @@ class Mumuki():
         display(HTML(str(soup.body.find_all("h1")[0])))
         display(HTML(str(soup.body.find_all("div", {"class":"exercise-assignment"})[0])))
 
-    def submit(self, solution):
-        display(HTML(self.__post_solution(solution).json()["html"]))
+    def register_solution(self, function=None):
+        self.__solution = self._get_source(function)
 
-    def get_main_solution(self):
-        return getattr(sys.modules['__main__'], 'solution')
+    def get_solution(self):
+        return self.__solution
 
     def test(self, function=None):
-        self.submit(self.get_source(function))
+        if self.__solution is None:
+            self.register_solution(function)
+        self._submit()
 
-    def get_source(self, function=None):
-        solution = function or self.get_main_solution()
+    def _submit(self):
+        display(HTML(self.__post_solution().json()["html"]))
+
+    def _get_main_solution(self):
+        return getattr(sys.modules['__main__'], 'solution')
+
+    def _get_source(self, function=None):
+        if type(function) == str:
+            return function
+
+        solution = function or self._get_main_solution()
         lines = inspect.getsourcelines(solution)[0][1:]
         indent_size = inspect.indentsize("".join(line.rstrip("\n\t ") for line in lines))
         return "".join(line[4:] for line in lines)
