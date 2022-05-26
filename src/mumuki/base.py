@@ -13,7 +13,7 @@ class BaseMumuki():
         self._prepare_before_visit()
 
         self.__organization = organization
-        self.__exercise_id = int(exercise)
+        self._exercise_id = int(exercise)
 
         if self._offline():
             return
@@ -21,27 +21,27 @@ class BaseMumuki():
         try:
             self._connect_after_visit()
         except:
-            raise RuntimeError(f"Could not visit exercise {exercise}. Please visit {self.__exercise_url()} and verify the instructions")
+            self._report_auth_error()
 
-    def __solution_url(self):
-        return f"{self.__exercise_url()}/solutions"
+    def _solution_url(self):
+        return f"{self._exercise_url()}/solutions"
 
-    def __exercise_url(self):
-        return f"{self._url}/{self.__organization}/exercises/{self.__exercise_id}"
+    def _exercise_url(self):
+        return f"{self._url}/{self.__organization}/exercises/{self._exercise_id}"
 
-    def __headers(self):
+    def _headers(self):
         return { "Authorization": f"Bearer {self._token}" }
 
     def _get_exercise(self):
         return requests.get(
-             self.__exercise_url(),
-             headers = self.__headers())
+             self._exercise_url(),
+             headers = self._headers())
 
-    def __post_solution(self):
+    def _post_solution(self):
         return requests.post(
-            self.__solution_url(),
+            self._solution_url(),
             json = { "solution": { "content": self._solution } },
-            headers = self.__headers())
+            headers = self._headers())
 
     def register_solution(self, function=None):
         self._solution = self._get_source(function)
@@ -59,7 +59,11 @@ class BaseMumuki():
         if self._offline():
             return
 
-        self._report_results(self.__post_solution().json())
+        result = self._post_solution()
+        if result.status_code    == 403:
+            self._report_auth_error()
+        else:
+            self._report_results(result.json())
 
     def _get_source(self, function=None):
         if type(function) == str:
@@ -70,3 +74,6 @@ class BaseMumuki():
             return "".join(line[indent_size:] for line in lines)
         else:
             return self._source_missing()
+
+    def _report_auth_error(self):
+        print(f"Could not access exercise {self._exercise_id}. Please visit {self._exercise_url()} and verify the instructions")
