@@ -3,6 +3,8 @@ import inspect
 import sys
 from bs4 import BeautifulSoup
 from IPython.core.display import display, HTML
+from IPython.core.magic import register_cell_magic
+from IPython.core.getipython import get_ipython
 
 class Mumuki():
     def __init__(self, token:str, locale:str, url = "https://mumuki.io"):
@@ -12,6 +14,10 @@ class Mumuki():
         self.__solution = None
 
     def visit(self, organization:str, exercise, show=True):
+        frame = inspect.stack()[1]
+        self.__start_line = frame.lineno
+        self.__file = frame.filename
+
         self.__organization = organization
         self.__exercise_id = int(exercise)
 
@@ -56,6 +62,8 @@ class Mumuki():
         return self.__solution
 
     def test(self, function=None):
+        frame = inspect.stack()[1]
+        self.__end_line = frame.lineno
         if self.__solution is None:
             self.register_solution(function)
         self._submit()
@@ -64,13 +72,24 @@ class Mumuki():
         display(HTML(self.__post_solution().json()["html"]))
 
     def _get_main_solution(self):
-        return getattr(sys.modules['__main__'], 'solution')
+        main = sys.modules['__main__']
+        if hasattr(main, 'solution'):
+            return getattr(sys.modules['__main__'], 'solution')
 
     def _get_source(self, function=None):
         if type(function) == str:
             return function
 
         solution = function or self._get_main_solution()
-        lines = inspect.getsourcelines(solution)[0][1:]
-        indent_size = inspect.indentsize("".join(line.rstrip("\n\t ") for line in lines))
-        return "".join(line[4:] for line in lines)
+        if solution:
+            lines = inspect.getsourcelines(solution)[0][1:]
+            indent_size = inspect.indentsize("".join(line.rstrip("\n\t ") for line in lines))
+            return "".join(line[indent_size:] for line in lines)
+        else:
+            with open(self.__file) as f:
+                return "".join(f.readlines()[self.__start_line:self.__end_line-1])
+
+@register_cell_magic
+def solution(line, cell):
+    getattr(sys.modules['__main__'], 'mumuki').register_solution(cell)
+    get_ipython().run_cell(cell)
