@@ -7,6 +7,7 @@ class BaseMumuki():
         self._url = url
         self._locale = locale
         self._solution = None
+        self._connected = False
         self._register_globals()
 
     def visit(self, organization:str, exercise):
@@ -20,6 +21,7 @@ class BaseMumuki():
 
         try:
             self._connect_after_visit()
+            self._connected = True
         except:
             self._report_auth_error()
 
@@ -59,8 +61,12 @@ class BaseMumuki():
         if self._offline():
             return
 
+        if not self._connected:
+            self._report_auth_error()
+            return
+
         result = self._post_solution()
-        if result.status_code    == 403:
+        if result.status_code == 403:
             self._report_auth_error()
         else:
             self._report_results(result.json())
