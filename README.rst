@@ -24,7 +24,7 @@ computer. Then install ``mumuki-xce``:
 
 .. code:: shell
 
-   pip install mumuki-xce
+   pip install mumuki-xce --quiet
 
 Now you are ready to solve exercises!
 
@@ -75,7 +75,7 @@ First create a cell with the following code:
 
 .. code:: python
 
-  !pip install mumuki-xce
+  !pip install mumuki-xce --quiet
 
   from mumuki import IMumuki
   mumuki = IMumuki("#...token...#", "#...locale...#")
