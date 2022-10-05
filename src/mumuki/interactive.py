@@ -1,25 +1,25 @@
 from bs4 import BeautifulSoup
 from IPython.core.display import HTML
-from IPython import display
+from IPython.display import display
 from IPython.core.getipython import get_ipython
 
 from mumuki.base import BaseMumuki
 
 def soup(html):
-    soup = BeautifulSoup(html, "html.parser")
-    for link in soup.find_all("a"):
+    s = BeautifulSoup(html, "html.parser")
+    for link in s.find_all("a"):
         if 'download' not in link.attrs:
             link['target'] = '_blank'
-    return soup
+    return s
 
-def html(soup):
+def html(soup: BeautifulSoup):
     return HTML(str(soup))
 
 class IMumuki(BaseMumuki):
     def show(self):
-        soup = soup(self._get_exercise().text)
-        display(html(soup.body.find_all("h1")[0]))
-        display(html(soup.body.find_all("div", {"class":"exercise-assignment"})[0]))
+        s = soup(self._get_exercise().text)
+        display(html(s.body.find_all("h1")[0]))
+        display(html(s.body.find_all("div", {"class":"exercise-assignment"})[0]))
 
     def _register_globals(self):
         def solution(_line, cell):
