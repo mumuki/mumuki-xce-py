@@ -13,7 +13,14 @@ def test_can_create_with_default_url():
     mumuki = IMumuki("token", "es")
     assert mumuki._url == "https://mumuki.io"
 
-def test_is_always_offline():
+def test_reports_failed_visits(capsys):
+    mumuki = IMumuki("token", "es", "http://localhost")
+    mumuki.visit("nonexistent", 100)
+
+    captured = capsys.readouterr()
+    assert captured.out == "Could not access exercise 100. Please visit http://localhost/nonexistent/exercises/100 and verify the instructions\n"
+
+def test_is_never_offline():
     mumuki = IMumuki("token", "es")
     assert not mumuki._offline()
 
