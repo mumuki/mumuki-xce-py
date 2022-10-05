@@ -12,15 +12,12 @@ def test_can_create_with_custom_url():
 
 def test_not_offline_by_default():
     mumuki = Mumuki("token", "es")
-    mumuki._offline()
     assert not mumuki._offline()
 
 def test_can_register_plain_string():
     mumuki = Mumuki("token", "es")
     mumuki.register_solution("def foo(): pass")
     assert mumuki._solution == "def foo(): pass"
-
-
 
 def test_can_register_function():
     def solution():

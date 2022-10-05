@@ -1,21 +1,36 @@
 from bs4 import BeautifulSoup
-from IPython.core.display import display, HTML
+from IPython.core.display import HTML
+from IPython import display
 from IPython.core.getipython import get_ipython
 
 from mumuki.base import BaseMumuki
 
+def soup(html):
+    soup = BeautifulSoup(html, "html.parser")
+    for link in soup.find_all("a"):
+        if 'download' not in link.attrs:
+            link['target'] = '_blank'
+    return soup
+
+def html(soup):
+    return HTML(str(soup))
+
 class IMumuki(BaseMumuki):
     def show(self):
-        soup = self._make_soup(self._get_exercise().text)
-        display(self._to_html(soup.body.find_all("h1")[0]))
-        display(self._to_html(soup.body.find_all("div", {"class":"exercise-assignment"})[0]))
+        soup = soup(self._get_exercise().text)
+        display(html(soup.body.find_all("h1")[0]))
+        display(html(soup.body.find_all("div", {"class":"exercise-assignment"})[0]))
 
     def _register_globals(self):
         def solution(_line, cell):
             self.register_solution(cell)
             get_ipython().run_cell(cell)
 
-        get_ipython().register_magic_function(solution, 'cell', 'solution')
+        ip = get_ipython()
+        if ip:
+            ip.register_magic_function(solution, 'cell', 'solution')
+        else:
+            raise RuntimeError('There is not ipython environment available. Make sure you are running from a Jupyter or Colab notebook')
 
     def _source_missing(self):
         raise RuntimeError("Please ensure to mark you solution cell with %%solution")
@@ -30,16 +45,7 @@ class IMumuki(BaseMumuki):
         pass
 
     def _report_results(self, results):
-        display(self._to_html(self._make_soup(results["html"])))
+        display(html(soup(results["html"])))
 
     def _offline(self):
         return False
-
-    def _make_soup(self, html):
-        soup = BeautifulSoup(html, "html.parser")
-        for link in soup.find_all("a"):
-            link['target'] = '_blank'
-        return soup
-
-    def _to_html(self, soup):
-        return HTML(str(soup))
