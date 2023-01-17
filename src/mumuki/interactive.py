@@ -30,10 +30,10 @@ class IMumuki(BaseMumuki):
         if ip:
             ip.register_magic_function(solution, 'cell', 'solution')
         else:
-            raise RuntimeError('There is not ipython environment available. Make sure you are running from a Jupyter or Colab notebook')
+            raise RuntimeError(self._locale.translate("no_ipython"))
 
     def _source_missing(self):
-        raise RuntimeError("Please ensure to mark you solution cell with %%solution")
+        raise RuntimeError(self._locale.translate("magic_cell_missing"))
 
     def _prepare_before_visit(self):
         pass

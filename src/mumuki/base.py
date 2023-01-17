@@ -1,11 +1,13 @@
 import requests
 import inspect
 
+from mumuki.i18n import Locale
+
 class BaseMumuki():
     def __init__(self, token:str, locale:str, url = "https://mumuki.io"):
         self._token = token
         self._url = url
-        self._locale = locale
+        self._locale = Locale(locale)
         self._solution = None
         self._connected = False
         self._register_globals()
@@ -82,4 +84,4 @@ class BaseMumuki():
             return self._source_missing()
 
     def _report_auth_error(self):
-        print(f"Could not access exercise {self._exercise_id}. Please visit {self._exercise_url()} and verify the instructions")
+        print(self._locale.translate("could_not_load_exercise", id = self._exercise_id, url = self._exercise_url()))
