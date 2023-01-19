@@ -96,3 +96,29 @@ Now please edit and run your cells as needed. Feel free also to create aditional
   mumuki.test()
 
 If you modify your code, don't forget to run your cells again.
+
+Development
+============
+
+In order to build this project, clone it and then run:
+
+```bash
+# load venv
+$ source .venv/bin/activate
+# configure project and run pytest
+$ tox
+```
+
+If you want to test the latest version of this project in your Colab or Jupyter environment, install `xce` within a cell like this:
+
+```
+!pip install git+https://github.com/mumuki/mumuki-xce-py.git@master
+```
+
+In order to deploy the latest version, tag this project and then:
+
+```bash
+$ tox -e build
+$ tox -e publish
+$ tox -e publish -- --repository pypi
+```
